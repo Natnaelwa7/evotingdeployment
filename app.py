@@ -23,6 +23,7 @@ from dotenv import load_dotenv
 import logging
 utc_now = datetime.fromtimestamp(time.time(), tz=timezone.utc)
 app = Flask(__name__)
+#postgresql://evoting_1y8o_user:Z8aAH5VHotJ2T71X46u4APQJBvhrUKIy@dpg-cv8756bqf0us73f6dmj0-a.oregon-postgres.render.com/evoting_1y8o
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///evoting.db'
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 db = SQLAlchemy(app)
