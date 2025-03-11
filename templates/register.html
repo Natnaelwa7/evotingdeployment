@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .registration-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+        margin-bottom: 20px;
+    }
+    .video-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
+    video, canvas {
+        width: 100%;
+        max-width: 400px;
+        border: 2px solid #007BFF;
+        border-radius: 10px;
+    }
+    canvas#overlay {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        pointer-events: none;
+    }
+    .btn-custom {
+        margin-top: 10px;
+        width: 100%;
+    }
+    #captureMessage, #emailError, #passwordError {
+        color: red;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    #message {
+        margin-top: 15px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container registration-container">
+    <h2>Voter Registration</h2>
+    <form id="registrationForm">
+        <div class="mb-3">
+            <input type="text" id="name" class="form-control" placeholder="Full Name" required>
+        </div>
+        <div class="mb-3">
+            <input type="email" id="email" class="form-control" placeholder="Email" required>
+            <p id="emailError"></p>
+        </div>
+        <div class="mb-3">
+            <input type="password" id="password" class="form-control" placeholder="Password" required>
+            <p id="passwordError"></p>
+        </div>
+        <div class="video-container">
+            <video id="video" autoplay></video>
+            <canvas id="overlay"></canvas>
+        </div>
+        <button type="button" class="btn btn-primary btn-custom" onclick="captureImage()">Capture Image</button>
+        <p id="captureMessage"></p>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <input type="hidden" id="imageData">
+        <button type="submit" class="btn btn-success btn-custom">Register</button>
+    </form>
+    <p id="message"></p>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const overlay = document.getElementById('overlay');
+    const imageDataInput = document.getElementById('imageData');
+    const captureMessage = document.getElementById('captureMessage');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => video.srcObject = stream)
+        .catch(err => console.error("Error accessing webcam:", err));
+
+    function drawOverlay() {
+        const ctx = overlay.getContext('2d');
+        overlay.width = video.videoWidth;
+        overlay.height = video.videoHeight;
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 4;
+        const rectWidth = overlay.width * 0.5;
+        const rectHeight = overlay.height * 0.5;
+        const rectX = (overlay.width - rectWidth) / 2;
+        const rectY = (overlay.height - rectHeight) / 2;
+        ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+    }
+
+    video.addEventListener('loadeddata', drawOverlay);
+
+    function captureImage() {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        imageDataInput.value = canvas.toDataURL('image/jpeg');
+        captureMessage.textContent = "Face captured successfully!";
+    }
+
+    function validateEmail() {
+        const email = document.getElementById('email').value;
+        const emailError = document.getElementById('emailError');
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            emailError.textContent = "Invalid email format";
+            return false;
+        }
+        emailError.textContent = "";
+        return true;
+    }
+
+    function validatePassword() {
+        const password = document.getElementById('password').value;
+        const passwordError = document.getElementById('passwordError');
+        const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!strongPasswordPattern.test(password)) {
+            passwordError.textContent = "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.";
+            return false;
+        }
+        passwordError.textContent = "";
+        return true;
+    }
+
+    document.getElementById('email').addEventListener('input', validateEmail);
+    document.getElementById('password').addEventListener('input', validatePassword);
+
+    document.getElementById('registrationForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        if (!validateEmail() || !validatePassword()) return;
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const image = imageDataInput.value;
+
+        if (!image) {
+            document.getElementById('message').textContent = "Please capture an image before submitting.";
+            return;
+        }
+
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password, image })
+        });
+
+        const result = await response.json();
+        document.getElementById('message').textContent = result.message;
+
+        if (response.ok) {
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        }
+    });
+</script>
+
+{% endblock %}
