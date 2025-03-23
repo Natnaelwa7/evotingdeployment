@@ -10,6 +10,7 @@ import base64
 from datetime import datetime, timezone
 import time
 import re
+from sqlalchemy import create_engine
 import mediapipe as mp
 from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
@@ -23,13 +24,21 @@ from dotenv import load_dotenv
 import logging
 utc_now = datetime.fromtimestamp(time.time(), tz=timezone.utc)
 app = Flask(__name__)
-#postgresql://evoting_1y8o_user:Z8aAH5VHotJ2T71X46u4APQJBvhrUKIy@dpg-cv8756bqf0us73f6dmj0-a.oregon-postgres.render.com/evoting_1y8o
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///evoting.db'
+# Load environment variables from .env
+load_dotenv()
+
+from dotenv import load_dotenv
+import os
+
+
+DATABASE_URL="postgresql://postgres.xixilmbyopeqmyrueaxv:Aster#123#@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
+
 
 class Voter(db.Model,UserMixin):
     id = db.Column(db.Integer, primary_key=True)
