@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Superuser Dashboard</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h3>Generate Invitation Code</h3>
+    <p>Check your email (<strong>{{ current_user.email }}</strong>) for requests from Election Officers or System Admins, then generate their invitation codes here.</p>
+    <form method="POST" action="{{ url_for('generate_invite') }}">
+        <div class="form-group">
+            <label for="user_type">User Type:</label>
+            <select name="user_type" id="user_type" class="form-control" required>
+                <option value="sysadmin">System Admin</option>
+                <option value="eadmin">Election Officer</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Enter requester's name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Enter requester's email" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate & Send Invite</button>
+    </form>
+
+    <h3>System Admins</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Invitation Code</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in admins %}
+            <tr>
+                <td>{{ admin.id }}</td>
+                <td>{{ admin.name }}</td>
+                <td>{{ admin.email }}</td>
+                <td>{{ admin.invitation_code or 'N/A' }}</td>
+                <td>{{ 'Pending' if admin.invitation_code else 'Registered' }}</td>
+                <td>
+                    <form action="{{ url_for('superuser_delete_admin', admin_id=admin.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Election Officers</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Invitation Code</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for officer in officers %}
+            <tr>
+                <td>{{ officer.id }}</td>
+                <td>{{ officer.name }}</td>
+                <td>{{ officer.email }}</td>
+                <td>{{ officer.invitation_code or 'N/A' }}</td>
+                <td>{{ 'Pending' if officer.invitation_code else 'Registered' }}</td>
+                <td>
+                    <form action="{{ url_for('superuser_delete_officer', officer_id=officer.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Voters</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for voter in voters %}
+            <tr>
+                <td>{{ voter.id }}</td>
+                <td>{{ voter.name }}</td>
+                <td>{{ voter.email }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
