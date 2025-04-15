@@ -3,25 +3,127 @@
 {% block title %}Election Admin Dashboard{% endblock %}
 
 {% block content %}
-<h2>Election Admin Dashboard</h2>
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">Election Administration Dashboard</h2>
+        <form action="{{ url_for('logout') }}" method="POST">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    </div>
 
-<h3>Current Elections</h3>
-<ul>
-    {% for election in elections %}
-        <li>{{ election.name }} ({{ election.start_time }} - {{ election.end_time }})</li>
-    {% endfor %}
-</ul>
+    <!-- Current Elections Card -->
+    <div class="card shadow mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Current Elections</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Election Name</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for election in elections %}
+                        <tr>
+                            <td>{{ election.name }}</td>
+                            <td>{{ election.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ election.end_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if election.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-<h3>Manage Candidates</h3>
-<a href="{{ url_for('add_candidate') }}">Add New Candidate</a>
+    <!-- Management Cards Grid -->
+    <div class="row">
+        <!-- Candidates Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow border-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-primary mb-4">
+                        <i class="fas fa-users me-2"></i>Candidate Management
+                    </h3>
+                    <a href="{{ url_for('add_candidate') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Add New Candidate
+                    </a>
+                </div>
+            </div>
+        </div>
 
-<h3>Manage Parties</h3>
-<a href="{{ url_for('add_party') }}">Add New Party</a>
+        <!-- Parties Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow border-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-primary mb-4">
+                        <i class="fas fa-flag me-2"></i>Party Management
+                    </h3>
+                    <a href="{{ url_for('add_party') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Add New Party
+                    </a>
+                </div>
+            </div>
+        </div>
 
-<h3>Manage Elections</h3>
-<a href="{{ url_for('add_election') }}">Add New Election</a>
-<a href="{{ url_for('home') }}">
-    <button>Back to Home</button>
-</a>
+        <!-- Elections Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow border-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-primary mb-4">
+                        <i class="fas fa-vote-yea me-2"></i>Election Management
+                    </h3>
+                    <a href="{{ url_for('add_election') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Create New Election
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Home -->
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-home me-2"></i>Return to Homepage
+        </a>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .text-primary {
+        color: #0d6efd !important;
+    }
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .border-primary {
+        border-color: #0d6efd !important;
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 {% endblock %}
