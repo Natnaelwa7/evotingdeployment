@@ -1,58 +1,187 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
+    /* Modern Gradient Background */
+    body {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+    }
+
+    /* Navigation */
+    .navbar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .navbar-brand {
+        font-weight: 700;
+        color: #2c3e50 !important;
+        letter-spacing: -0.5px;
+    }
+
+    .nav-link {
+        color: #5a6b7d !important;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .nav-link:hover {
+        color: #2c3e50 !important;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #3498db;
+        transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+        width: 100%;
+    }
+
+    /* Hero Section */
     .hero-section {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
         color: white;
-        padding: 100px 0;
-        margin-bottom: 50px;
+        padding: 6rem 0 4rem;
+        position: relative;
+        overflow: hidden;
     }
-    
-    .feature-card {
-        transition: transform 0.3s;
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
+    .hero-title {
+        font-weight: 800;
+        font-size: 2.2rem;
+        line-height: 1.2;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    
-    .feature-card:hover {
-        transform: translateY(-10px);
-    }
-    
+
+    /* Role Cards Slider */
     .role-section {
-        padding: 50px 0;
+        padding: 3rem 0;
+        position: relative;
+        max-width: 800px;
+        margin: 0 auto;
     }
-    
-    .btn-custom {
-        padding: 10px 25px;
-        border-radius: 25px;
-        margin: 5px;
-        transition: all 0.3s;
+
+    .role-card {
+        border: none;
+        border-radius: 1rem;
+        background: white;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        overflow: hidden;
+        position: absolute;
+        width: 100%;
+        opacity: 0;
+        transform: translateX(-100%);
     }
-    
-    .btn-voter {
-        background: #4CAF50;
+
+    .role-card.active {
+        opacity: 1;
+        transform: translateX(0);
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .role-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+    }
+
+    .voter::before { background: linear-gradient(135deg, #27ae60 0%, #219653 100%); }
+    .eadmin::before { background: linear-gradient(135deg, #2980b9 0%, #20638f 100%); }
+    .sysadmin::before { background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%); }
+    .superadmin::before { background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: -30px auto 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         color: white;
     }
-    
-    .btn-eadmin {
-        background: #2196F3;
-        color: white;
+
+    .voter .card-icon { background: #27ae60; }
+    .eadmin .card-icon { background: #2980b9; }
+    .sysadmin .card-icon { background: #8e44ad; }
+    .superadmin .card-icon { background: #e67e22; }
+
+    .role-card .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.6rem;
+        font-size: 0.9rem;
+        font-weight: 600;
     }
-    
-    .btn-sysadmin {
-        background: #9C27B0;
-        color: white;
+
+    /* Navigation Arrows */
+    .slider-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 1rem;
+        z-index: 10;
     }
-    
-    .icon-container {
-        font-size: 2.5rem;
-        margin-bottom: 20px;
+
+    .nav-arrow {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        background: #6c757d;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nav-arrow:hover {
+        background: #5a6268;
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .nav-arrow i {
+        font-size: 1.2rem;
+    }
+
+    /* Footer */
+    .main-footer {
+        background: #2c3e50;
+        color: rgba(255,255,255,0.9);
+        padding: 3rem 0;
+    }
+
+    .footer-links a {
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        transition: color 0.3s ease;
     }
 </style>
 
 <!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" href="/">E-Vote</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -61,13 +190,13 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/login">Voter Login</a>
+                    <a class="nav-link" href="/">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/eadmin/login">Election Officer</a>
+                    <a class="nav-link" href="/about">About</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/sysadmin/login">System Admin</a>
+                    <a class="nav-link" href="/policy">Policy</a>
                 </li>
             </ul>
         </div>
@@ -75,66 +204,94 @@
 </nav>
 
 <!-- Hero Section -->
-<div class="hero-section">
-    <div class="container text-center">
-        <h1 class="display-4 mb-4">Welcome to Secure Ethiopian E-Voting system with facial recogintion</h1>
-        <p class="lead">Cast your vote securely from anywhere, anytime</p>
-        <div class="mt-4">
-            <a href="/register" class="btn btn-light btn-lg mx-2">Voter Registration</a>
-            <a href="/login" class="btn btn-outline-light btn-lg mx-2">Voter Login</a>
+<section class="hero-section">
+    <div class="container text-center position-relative">
+        <h1 class="hero-title mb-4">Secure Ethiopian E-Voting System<br>with Facial Recognition</h1>
+        <p class="lead mb-5 opacity-85">Ensuring secure and accessible elections through advanced technology</p>
+        <div class="hero-cta">
+            <a href="/register" class="btn btn-light me-2">Get Started</a>
+            <a href="/login" class="btn btn-outline-light">Voter Login</a>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Roles Section -->
-<div class="container role-section">
-    <div class="row g-4">
-        <!-- Voter Card -->
-        <div class="col-md-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="icon-container text-success">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <h3 class="card-title mb-3">Voter</h3>
-                    <p class="card-text">Participate in elections securely using Facial recogintion-based verification.</p>
-                    <div class="mt-4">
-                        <a href="/register" class="btn btn-custom btn-voter">Register</a>
-                        <a href="/login" class="btn btn-custom btn-outline-secondary">Login</a>
+<!-- Role Cards Slider -->
+<div class="role-section">
+    <div class="slider-nav">
+        <button class="nav-arrow" id="prevBtn">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="nav-arrow" id="nextBtn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    
+    <div class="container">
+        <div class="row justify-content-center">
+            <!-- Voter Card -->
+            <div class="col-lg-8">
+                <div class="role-card voter active">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <h4 class="mb-3">Voter</h4>
+                        <p class="text-muted mb-3 small">Secure voting with biometric verification and real-time tracking</p>
+                        <div class="d-grid gap-2">
+                            <a href="/register" class="btn btn-success btn-sm">Register</a>
+                            <a href="/login" class="btn btn-outline-secondary btn-sm">Login</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Election Officer Card -->
-        <div class="col-md-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="icon-container text-primary">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3 class="card-title mb-3">Election Officer</h3>
-                    <p class="card-text">Manage election processes and monitor real-time voting statistics.</p>
-                    <div class="mt-4">
-                        <a href="/eadmin/register" class="btn btn-custom btn-eadmin">Register</a>
-                        <a href="/eadmin/login" class="btn btn-custom btn-outline-secondary">Login</a>
+            <!-- Election Admin Card -->
+            <div class="col-lg-8">
+                <div class="role-card eadmin">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="mb-3">Election Admin</h4>
+                        <p class="text-muted mb-3 small">Manage elections and monitor voting processes in real-time</p>
+                        <div class="d-grid gap-2">
+                            <a href="/eadmin/register" class="btn btn-primary btn-sm">Admin Portal</a>
+                            <a href="/eadmin/login" class="btn btn-outline-secondary btn-sm">Login</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- System Admin Card -->
-        <div class="col-md-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="icon-container text-danger">
-                        <i class="fas fa-cogs"></i>
+            <!-- System Admin Card -->
+            <div class="col-lg-8">
+                <div class="role-card sysadmin">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <h4 class="mb-3">System Admin</h4>
+                        <p class="text-muted mb-3 small">Maintain system security and manage platform configurations</p>
+                        <div class="d-grid gap-2">
+                            <a href="/sysadmin/register" class="btn btn-dark btn-sm">System Console</a>
+                            <a href="/sysadmin/login" class="btn btn-outline-secondary btn-sm">Login</a>
+                        </div>
                     </div>
-                    <h3 class="card-title mb-3">System Admin</h3>
-                    <p class="card-text">Manage system configurations and maintain platform security.</p>
-                    <div class="mt-4">
-                        <a href="/sysadmin/register" class="btn btn-custom btn-sysadmin">Register</a>
-                        <a href="/sysadmin/login" class="btn btn-custom btn-outline-secondary">Login</a>
+                </div>
+            </div>
+
+            <!-- Superuser Card -->
+            <div class="col-lg-8">
+                <div class="role-card superadmin">
+                    <div class="card-body text-center p-3">
+                        <div class="card-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h4 class="mb-3">Superuser</h4>
+                        <p class="text-muted mb-3 small">Full system access for administration and oversight</p>
+                        <div class="d-grid gap-2">
+                            <a href="/superuser/console" class="btn btn-warning btn-sm">Superuser Console</a>
+                            <a href="/superuser/login" class="btn btn-outline-secondary btn-sm">Login</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -143,23 +300,69 @@
 </div>
 
 <!-- Footer -->
-<footer class="bg-dark text-white mt-5">
-    <div class="container py-4">
-        <div class="row">
-            <div class="col-md-6">
-                <h5>About E-Vote</h5>
-                <p class="text-muted">Secure digital voting platform using Facial recogintion technology</p>
+<footer class="main-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5 class="text-white mb-3">E-Vote System</h5>
+                <p class="opacity-75 small">Secure digital voting platform powered by advanced biometric verification technology</p>
             </div>
-            <div class="col-md-6 text-end">
-                <p class="mb-0">&copy; 2025 E-Vote System. All rights reserved.</p>
+            <div class="col-md-4">
+                <h5 class="text-white mb-3">Quick Links</h5>
+                <div class="footer-links d-flex flex-column">
+                    <a href="/about" class="mb-2 small">About Us</a>
+                    <a href="/policy" class="mb-2 small">Security Policy</a>
+                    <a href="/faq" class="mb-2 small">FAQ</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h5 class="text-white mb-3">Connect</h5>
+                <div class="social-links d-flex gap-2">
+                    <a href="#" class="btn btn-outline-light btn-sm"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="btn btn-outline-light btn-sm"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="btn btn-outline-light btn-sm"><i class="fab fa-linkedin-in"></i></a>
+                </div>
             </div>
         </div>
+        <hr class="my-4 opacity-25">
+        <p class="text-center opacity-75 mb-0 small">© 2025 E-Vote System. All rights reserved.</p>
     </div>
 </footer>
 
-<!-- Bootstrap JS and dependencies -->
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Font Awesome -->
 <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+<script>
+    const cards = document.querySelectorAll('.role-card');
+    let currentCard = 0;
+
+    function showCard(index) {
+        cards.forEach(card => card.classList.remove('active'));
+        cards[index].classList.add('active');
+    }
+
+    function nextCard() {
+        currentCard = (currentCard + 1) % cards.length;
+        showCard(currentCard);
+    }
+
+    function prevCard() {
+        currentCard = (currentCard - 1 + cards.length) % cards.length;
+        showCard(currentCard);
+    }
+
+    // Initialize slider
+    showCard(currentCard);
+    
+    // Event listeners for arrows
+    document.getElementById('nextBtn').addEventListener('click', nextCard);
+    document.getElementById('prevBtn').addEventListener('click', prevCard);
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') nextCard();
+        if (e.key === 'ArrowLeft') prevCard();
+    });
+</script>
 
 {% endblock %}
