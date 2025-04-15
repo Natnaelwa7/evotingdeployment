@@ -1,35 +1,189 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>Election Results</h2>
+<div class="results-container">
+    <div class="results-header">
+        <h2 class="results-title"><i class="fas fa-poll-h"></i> Election Results</h2>
+    </div>
 
     {% for election, parties in results.items() %}
-        <h3>{{ election }}</h3>
+    <div class="election-card">
+        <div class="election-header">
+            <h3 class="election-name">{{ election }}</h3>
+        </div>
+        
         {% for party, data in parties.items() %}
-            <h4>{{ party }} (Total Votes: {{ data.party_votes }})</h4>
-            <table class="table table-striped">
+        <div class="party-card">
+            <div class="party-header">
+                <h4 class="party-name">{{ party }}</h4>
+                <span class="total-votes">{{ data.party_votes }} Total Votes</span>
+            </div>
+            
+            <table class="results-table">
                 <thead>
                     <tr>
-                        <th>Candidate</th>
-                        <th>Votes</th>
+                        <th class="candidate-col">Candidate</th>
+                        <th class="votes-col">Votes</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for candidate in data.candidates %}
-                        <tr>
-                            <td>{{ candidate.candidate_name }}</td>
-                            <td>{{ candidate.votes }}</td>
-                        </tr>
+                    <tr>
+                        <td>{{ candidate.candidate_name }}</td>
+                        <td class="vote-count">{{ candidate.votes }}</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
-          
-            
+        </div>
         {% endfor %}
+    </div>
     {% endfor %}
-    <a href="{{ url_for('home') }}">
-        <button>Back to Home</button>
-    </a>
+
+    <div class="action-bar">
+        <a href="{{ url_for('home') }}" class="home-btn">
+            <i class="fas fa-arrow-left"></i> Return to Home
+        </a>
+    </div>
 </div>
+
+<style>
+    .results-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #f8f9fe;
+        border-radius: 12px;
+    }
+
+    .results-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #e3effd;
+    }
+
+    .results-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 2rem;
+    }
+
+    .election-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.05);
+        margin-bottom: 2.5rem;
+        padding: 1.5rem;
+    }
+
+    .election-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f4f9;
+    }
+
+    .election-name {
+        color: #3498db;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .party-card {
+        margin-bottom: 2rem;
+        background: #f8fafd;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .party-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .party-name {
+        color: #2980b9;
+        font-weight: 500;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    .total-votes {
+        background: #3498db;
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .results-table th {
+        background: #3498db;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 500;
+    }
+
+    .results-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f4f9;
+    }
+
+    .vote-count {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .action-bar {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e3effd;
+    }
+
+    .home-btn {
+        background: #3498db;
+        color: white;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .home-btn:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .results-container {
+            padding: 1rem;
+            margin: 1rem;
+        }
+        
+        .party-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 {% endblock %}
