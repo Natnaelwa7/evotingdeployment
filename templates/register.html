@@ -35,7 +35,7 @@
         margin-top: 10px;
         width: 100%;
     }
-    #captureMessage, #emailError, #passwordError {
+    #captureMessage, #emailError, #passwordError, #codeError {
         color: red;
         font-weight: bold;
         margin-top: 10px;
@@ -43,6 +43,9 @@
     #message {
         margin-top: 15px;
         font-weight: bold;
+    }
+    #codeSection {
+        display: none;
     }
 </style>
 
@@ -60,6 +63,10 @@
             <input type="password" id="password" class="form-control" placeholder="Password" required>
             <p id="passwordError"></p>
         </div>
+        <div class="mb-3" id="codeSection">
+            <input type="text" id="code" class="form-control" placeholder="Invitation Code" required>
+            <p id="codeError"></p>
+        </div>
         <div class="video-container">
             <video id="video" autoplay></video>
             <canvas id="overlay"></canvas>
@@ -68,7 +75,7 @@
         <p id="captureMessage"></p>
         <canvas id="canvas" style="display: none;"></canvas>
         <input type="hidden" id="imageData">
-        <button type="submit" class="btn btn-success btn-custom">Register</button>
+        <button type="button" id="actionBtn" class="btn btn-primary btn-custom" onclick="handleAction()">Request Verification Code</button>
     </form>
     <p id="message"></p>
 </div>
@@ -79,7 +86,11 @@
     const overlay = document.getElementById('overlay');
     const imageDataInput = document.getElementById('imageData');
     const captureMessage = document.getElementById('captureMessage');
+    const actionBtn = document.getElementById('actionBtn');
+    const codeSection = document.getElementById('codeSection');
+    let isCodeRequested = false;
 
+    // Initialize webcam
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => video.srcObject = stream)
         .catch(err => console.error("Error accessing webcam:", err));
@@ -133,38 +144,74 @@
         return true;
     }
 
+    function validateCode() {
+        const code = document.getElementById('code').value;
+        const codeError = document.getElementById('codeError');
+        if (isCodeRequested && code.length !== 8) {
+            codeError.textContent = "Code must be 8 characters long";
+            return false;
+        }
+        codeError.textContent = "";
+        return true;
+    }
+
     document.getElementById('email').addEventListener('input', validateEmail);
     document.getElementById('password').addEventListener('input', validatePassword);
+    document.getElementById('code').addEventListener('input', validateCode);
 
-    document.getElementById('registrationForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
+    async function handleAction() {
         if (!validateEmail() || !validatePassword()) return;
-        
+
         const name = document.getElementById('name').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const image = imageDataInput.value;
 
-        if (!image) {
-            document.getElementById('message').textContent = "Please capture an image before submitting.";
-            return;
+        if (!isCodeRequested) {
+            // Step 1: Request Verification Code
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ step: 'request_code', name, email, password })
+            });
+
+            const result = await response.json();
+            document.getElementById('message').textContent = result.message;
+
+            if (response.ok && result.success) {
+                isCodeRequested = true;
+                codeSection.style.display = 'block';
+                actionBtn.textContent = 'Register';
+                actionBtn.classList.remove('btn-primary');
+                actionBtn.classList.add('btn-success');
+            }
+        } else {
+            // Step 2: Register with Verification Code
+            if (!validateCode()) return;
+
+            const code = document.getElementById('code').value;
+            const image = imageDataInput.value;
+
+            if (!image) {
+                document.getElementById('message').textContent = "Please capture an image before submitting.";
+                return;
+            }
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ step: 'verify_code', name, email, password, code, image })
+            });
+
+            const result = await response.json();
+            document.getElementById('message').textContent = result.message;
+
+            if (response.ok && result.success) {
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            }
         }
-
-        const response = await fetch('/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, image })
-        });
-
-        const result = await response.json();
-        document.getElementById('message').textContent = result.message;
-
-        if (response.ok) {
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
-        }
-    });
+    }
 </script>
 
 {% endblock %}
