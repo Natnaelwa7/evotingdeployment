@@ -12,6 +12,7 @@
     }
     h2 {
         margin-bottom: 20px;
+        text-align: center;
     }
     .alert {
         padding: 10px;
@@ -28,21 +29,56 @@
         color: #721c24;
         border: 1px solid #f5c6cb;
     }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
     .btn-custom {
         width: 100%;
+        padding: 10px;
         margin-top: 10px;
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-custom:hover {
+        background-color: #27ae60;
+    }
+    .btn-request {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-request:hover {
+        background-color: #2980b9;
     }
 </style>
 
 <div class="container register-container">
-    <h2 class="text-center">Election Officer Registration</h2>
+    <h2>Election Officer Registration</h2>
     
     <!-- Flash Messages -->
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-        <div class="alert {{ 'alert-' + category }}">{{ message }}</div>
-    {% endfor %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-    <form method="POST">
+    <!-- Registration Form -->
+    <form method="POST" action="{{ url_for('eadmin_register') }}">
+        <input type="hidden" name="action" value="register">
         <div class="mb-3">
             <label class="form-label">Name</label>
             <input type="text" name="name" class="form-control" required>
@@ -55,7 +91,25 @@
             <label class="form-label">Password</label>
             <input type="password" name="password" class="form-control" required>
         </div>
-        <button type="submit" class="btn btn-primary btn-custom">Register</button>
+        <div class="mb-3">
+            <label class="form-label">Invitation Code</label>
+            <input type="text" name="invitation_code" class="form-control" required>
+        </div>
+        <button type="submit" class="btn-custom">Register</button>
+    </form>
+
+    <!-- Request Invitation Form -->
+    <form method="POST" action="{{ url_for('eadmin_register') }}">
+        <input type="hidden" name="action" value="request_invite">
+        <div class="mb-3">
+            <label class="form-label">Name (for Request)</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email (for Request)</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+        <button type="submit" class="btn-request">Request Invitation Code</button>
     </form>
 </div>
 
