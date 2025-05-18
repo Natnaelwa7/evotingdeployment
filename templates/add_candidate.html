@@ -1,29 +1,180 @@
 {% extends "base.html" %}
+
+{% block title %}Add Candidate{% endblock %}
+
 {% block content %}
-<div class="container">
+<style>
+    .form-container {
+        max-width: 600px; /* Increased width to accommodate more fields */
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h2 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-group label {
+        display: block;
+        color: #34495e;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    .form-group textarea {
+        height: 100px; /* Fixed height for bio */
+        resize: vertical; /* Allow vertical resize only */
+    }
+    .form-group input[type="file"] {
+        padding: 0.4rem; /* Adjust padding for file input */
+    }
+    .btn-primary {
+        width: 100%;
+        padding: 0.8rem;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: #2980b9;
+    }
+    .btn-logout {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        float: right;
+    }
+    .btn-logout:hover {
+        background: #bbdefb;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .back-link:hover {
+        color: #2980b9;
+    }
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-error { /* Matches backend flash category */
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+</style>
+
+<div class="form-container">
+    <!-- Logout Button -->
+    <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
+        <button type="submit" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </form>
+
     <h2>Add New Candidate</h2>
-    <form method="POST" action="{{ url_for('add_candidate') }}">
-        <div>
-            <label for="name">Candidate Name:</label>
-            <input type="text" name="name" required>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('add_candidate') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Candidate Name</label>
+            <input type="text" id="name" name="name" required>
         </div>
-        <div>
-            <label for="party_id">Select Party:</label>
-            <select name="party_id" required>
+        <div class="form-group">
+            <label for="party_id">Select Party</label>
+            <select id="party_id" name="party_id" required>
+                <option value="" disabled selected>Select a party</option>
                 {% for party in parties %}
                     <option value="{{ party.id }}">{{ party.name }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div>
-            <label for="election_id">Select Election:</label>
-            <select name="election_id" required>
+        <div class="form-group">
+            <label for="election_id">Select Election</label>
+            <select id="election_id" name="election_id" required>
+                <option value="" disabled selected>Select an election</option>
                 {% for election in elections %}
                     <option value="{{ election.id }}">{{ election.name }}</option>
                 {% endfor %}
             </select>
         </div>
-        <button type="submit">Add Candidate</button>
+        <div class="form-group">
+            <label for="date_of_birth">Date of Birth</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" required>
+        </div>
+        <div class="form-group">
+            <label for="bio">Biography</label>
+            <textarea id="bio" name="bio"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="eligibility_status">Eligibility Status</label>
+            <select id="eligibility_status" name="eligibility_status">
+                <option value="Pending" selected>Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Disqualified">Disqualified</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="id_card">Upload ID Card (PNG/JPG)</label>
+            <input type="file" id="id_card" name="id_card" accept="image/png,image/jpeg" required>
+        </div>
+        <div class="form-group">
+            <label for="candidate_photo">Upload Candidate Photo (PNG/JPG)</label>
+            <input type="file" id="candidate_photo" name="candidate_photo" accept="image/png,image/jpeg" required>
+        </div>
+        <button type="submit" class="btn-primary">Add Candidate</button>
     </form>
+    <a href="{{ url_for('eadmin_dashboard') }}" class="back-link">Back to Dashboard</a>
 </div>
+
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 {% endblock %}
