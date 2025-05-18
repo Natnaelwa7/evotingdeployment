@@ -1,11 +1,213 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
+<style>
+    .results-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #f8f9fe;
+        border-radius: 12px;
+    }
+    .results-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #e3effd;
+    }
+    .results-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 2rem;
+    }
+    .election-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.05);
+        margin-bottom: 2.5rem;
+        padding: 1.5rem;
+    }
+    .election-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f4f9;
+    }
+    .election-name {
+        color: #3498db;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+    .party-card {
+        margin-bottom: 2rem;
+        background: #f8fafd;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    .party-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .party-name {
+        color: #2980b9;
+        font-weight: 500;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    .total-votes {
+        background: #3498db;
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .results-table th {
+        background: #3498db;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 500;
+    }
+    .results-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f4f9;
+    }
+    .vote-count {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .action-bar {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e3effd;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    .home-btn, .logout-btn {
+        background: #3498db;
+        color: white;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .home-btn:hover, .logout-btn:hover {
+        background: #2980b9;
+        transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
+    }
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    .charts-container {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+    .chart-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.05);
+    }
+    .chart-card h4 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    canvas {
+        max-width: 100%;
+    }
+    @media (max-width: 768px) {
+        .results-container {
+            padding: 1rem;
+            margin: 1rem;
+        }
+        .party-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        .action-bar {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .charts-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <div class="results-container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="results-header">
         <h2 class="results-title"><i class="fas fa-poll-h"></i> Election Results</h2>
     </div>
 
+    <!-- Statistical Charts -->
+    <div class="charts-container">
+        <div class="chart-card">
+            <h4>Votes by State</h4>
+            <canvas id="stateChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h4>Votes by Gender</h4>
+            <canvas id="genderChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h4>Votes by Age Group</h4>
+            <canvas id="ageChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h4>Votes by Candidate</h4>
+            <canvas id="candidateChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Election Results Tables -->
     {% for election, parties in results.items() %}
     <div class="election-card">
         <div class="election-header">
@@ -44,146 +246,181 @@
         <a href="{{ url_for('home') }}" class="home-btn">
             <i class="fas fa-arrow-left"></i> Return to Home
         </a>
+        <!-- Conditionally show logout button based on authentication status -->
+        <div id="logout-section" style="display: none;">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
     </div>
 </div>
 
-<style>
-    .results-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background: #f8f9fe;
-        border-radius: 12px;
-    }
-
-    .results-header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 2px solid #e3effd;
-    }
-
-    .results-title {
-        color: #2c3e50;
-        font-weight: 600;
-        font-size: 2rem;
-    }
-
-    .election-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.05);
-        margin-bottom: 2.5rem;
-        padding: 1.5rem;
-    }
-
-    .election-header {
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #f0f4f9;
-    }
-
-    .election-name {
-        color: #3498db;
-        font-weight: 600;
-        font-size: 1.5rem;
-    }
-
-    .party-card {
-        margin-bottom: 2rem;
-        background: #f8fafd;
-        border-radius: 8px;
-        padding: 1.5rem;
-    }
-
-    .party-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .party-name {
-        color: #2980b9;
-        font-weight: 500;
-        font-size: 1.2rem;
-        margin: 0;
-    }
-
-    .total-votes {
-        background: #3498db;
-        color: white;
-        padding: 0.3rem 1rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-    }
-
-    .results-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .results-table th {
-        background: #3498db;
-        color: white;
-        padding: 1rem;
-        text-align: left;
-        font-weight: 500;
-    }
-
-    .results-table td {
-        padding: 1rem;
-        border-bottom: 1px solid #f0f4f9;
-    }
-
-    .vote-count {
-        font-weight: 600;
-        color: #2c3e50;
-    }
-
-    .action-bar {
-        text-align: center;
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 2px solid #e3effd;
-    }
-
-    .home-btn {
-        background: #3498db;
-        color: white;
-        padding: 0.8rem 2rem;
-        border-radius: 25px;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .home-btn:hover {
-        background: #2980b9;
-        transform: translateY(-1px);
-        color: white;
-        text-decoration: none;
-    }
-
-    @media (max-width: 768px) {
-        .results-container {
-            padding: 1rem;
-            margin: 1rem;
-        }
-        
-        .party-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-    }
-</style>
-
+<!-- Font Awesome Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<script>
+    // Pass stats data from Flask to JavaScript
+    const electionStats = JSON.parse('{{ stats | tojson | safe }}');
+
+    // Colors for charts
+    const colors = {
+        primary: '#3498db',
+        secondary: '#2980b9',
+        accent: '#e74c3c',
+        background: '#f8f9fe'
+    };
+
+    // Votes by State (Bar Chart)
+    const stateChart = new Chart(document.getElementById('stateChart'), {
+        type: 'bar',
+        data: {
+            labels: electionStats.by_state.map(item => item.state),
+            datasets: [{
+                label: 'Votes',
+                data: electionStats.by_state.map(item => item.votes),
+                backgroundColor: colors.primary,
+                borderColor: colors.secondary,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Votes by State' }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Number of Votes' } },
+                x: { title: { display: true, text: 'State' } }
+            }
+        }
+    });
+
+    // Votes by Gender (Pie Chart)
+    const genderChart = new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: electionStats.by_gender.map(item => item.gender),
+            datasets: [{
+                data: electionStats.by_gender.map(item => item.votes),
+                backgroundColor: [colors.primary, colors.accent, '#2ecc71'],
+                borderColor: colors.background,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Votes by Gender' }
+            }
+        }
+    });
+
+    // Votes by Age Group (Bar Chart)
+    const ageChart = new Chart(document.getElementById('ageChart'), {
+        type: 'bar',
+        data: {
+            labels: electionStats.by_age.map(item => item.age_group),
+            datasets: [{
+                label: 'Votes',
+                data: electionStats.by_age.map(item => item.votes),
+                backgroundColor: colors.primary,
+                borderColor: colors.secondary,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Votes by Age Group' }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Number of Votes' } },
+                x: { title: { display: true, text: 'Age Group' } }
+            }
+        }
+    });
+
+    // Votes by Candidate (Bar Chart)
+    const candidateChart = new Chart(document.getElementById('candidateChart'), {
+        type: 'bar',
+        data: {
+            labels: electionStats.by_candidate.map(item => item.candidate),
+            datasets: [{
+                label: 'Votes',
+                data: electionStats.by_candidate.map(item => item.votes),
+                backgroundColor: colors.primary,
+                borderColor: colors.secondary,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Votes by Candidate' }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Number of Votes' } },
+                x: { title: { display: true, text: 'Candidate' } }
+            }
+        }
+    });
+
+    // Authentication check
+    async function checkAuth() {
+        try {
+            const response = await fetch('/results', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('logout-section').style.display = 'inline-flex';
+            } else {
+                document.getElementById('logout-section').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+            document.getElementById('logout-section').style.display = 'none';
+        }
+    }
+
+    // Logout function
+    async function logout() {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.href = '/';
+            } else {
+                alert('Logout failed: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            alert('Logout failed');
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAuth();
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', logout);
+        }
+    });
+</script>
 
 {% endblock %}
