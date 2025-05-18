@@ -1,7 +1,98 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="container">
-    <h2>Superuser Dashboard</h2>
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h2, h3 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-control {
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 1rem;
+    }
+    .btn-primary {
+        background: #3498db;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        color: white;
+        transition: background 0.3s ease;
+        cursor: pointer;
+    }
+    .btn-primary:hover {
+        background: #2980b9;
+    }
+    .btn-danger {
+        background: #e74c3c;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        color: white;
+        transition: background 0.3s ease;
+        cursor: pointer;
+    }
+    .btn-danger:hover {
+        background: #c0392b;
+    }
+    .table {
+        width: 100%;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .table th {
+        background: #3498db;
+        color: white;
+        padding: 1rem;
+    }
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    .logout-section {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -10,8 +101,20 @@
         {% endif %}
     {% endwith %}
 
+    <!-- Logout Section -->
+    <div class="logout-section">
+        <form action="{{ url_for('logout') }}" method="POST">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    </div>
+
+    <h2>Superuser Dashboard</h2>
+
+    <!-- Generate Invitation Code -->
     <h3>Generate Invitation Code</h3>
-    <p>Check your email (<strong>{{ current_user.email }}</strong>) for requests from Election Officers or System Admins, then generate their invitation codes here.</p>
+    <p>Review requests from Election Officers or System Admins, then generate their invitation codes here.</p>
     <form method="POST" action="{{ url_for('generate_invite') }}">
         <div class="form-group">
             <label for="user_type">User Type:</label>
@@ -28,9 +131,10 @@
             <label for="email">Email:</label>
             <input type="email" class="form-control" id="email" name="email" placeholder="Enter requester's email" required>
         </div>
-        <button type="submit" class="btn btn-primary">Generate & Send Invite</button>
+        <button type="submit" class="btn-primary">Generate & Send Invite</button>
     </form>
 
+    <!-- System Admins -->
     <h3>System Admins</h3>
     <table class="table">
         <thead>
@@ -53,7 +157,7 @@
                 <td>{{ 'Pending' if admin.invitation_code else 'Registered' }}</td>
                 <td>
                     <form action="{{ url_for('superuser_delete_admin', admin_id=admin.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                        <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
                     </form>
                 </td>
             </tr>
@@ -61,6 +165,7 @@
         </tbody>
     </table>
 
+    <!-- Election Officers -->
     <h3>Election Officers</h3>
     <table class="table">
         <thead>
@@ -83,7 +188,7 @@
                 <td>{{ 'Pending' if officer.invitation_code else 'Registered' }}</td>
                 <td>
                     <form action="{{ url_for('superuser_delete_officer', officer_id=officer.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
+                        <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
                     </form>
                 </td>
             </tr>
@@ -91,6 +196,7 @@
         </tbody>
     </table>
 
+    <!-- Voters -->
     <h3>Voters</h3>
     <table class="table">
         <thead>
@@ -110,5 +216,14 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('home') }}" class="btn-primary" style="text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Return to Home
+        </a>
+    </div>
 </div>
+
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 {% endblock %}
