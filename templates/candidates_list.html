@@ -1,53 +1,167 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}
-    Candidates List
-{% endblock %}
+{% block title %}Candidates List{% endblock %}
 
 {% block content %}
-    <h1>Candidates List</h1>
+<style>
+    .container {
+        max-width: 1200px; /* Increased width for more columns */
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .btn-logout {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        float: right;
+    }
+    .btn-logout:hover {
+        background: #bbdefb;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .back-link:hover {
+        color: #2980b9;
+    }
+    .candidates-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    .candidates-table th, .candidates-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .candidates-table th {
+        background: #3498db;
+        color: white;
+        font-weight: 500;
+    }
+    .candidates-table img {
+        max-width: 50px;
+        max-height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .bio-text {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-error { /* Updated to match backend */
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+</style>
 
-    <!-- Form to Add New Candidate -->
-    <h2>Add New Candidate</h2>
-    <form method="POST">
-        <label for="candidate_name">Candidate Name:</label>
-        <input type="text" id="candidate_name" name="candidate_name" required>
-
-        <label for="party_id">Party:</label>
-        <select id="party_id" name="party_id" required>
-            {% for party in parties %}
-                <option value="{{ party.id }}">{{ party.name }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="election_id">Election:</label>
-        <select id="election_id" name="election_id" required>
-            {% for election in elections %}
-                <option value="{{ election.id }}">{{ election.name }}</option>
-            {% endfor %}
-        </select>
-
-        <button type="submit">Add Candidate</button>
+<div class="container">
+    <!-- Logout Button -->
+    <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
+        <button type="submit" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
     </form>
 
+    <h1>Candidates List</h1>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <!-- Display List of Candidates -->
-    <h2>Current Candidates</h2>
-    <table border="1">
+    <table class="candidates-table">
         <thead>
             <tr>
-                <th>Candidate Name</th>
+                <th>Name</th>
                 <th>Party</th>
                 <th>Election</th>
+                <th>Date of Birth</th>
+                <th>Biography</th>
+                <th>Photo</th>
+                <th>Eligibility Status</th>
+                <th>National ID</th>
+                <th>Votes</th>
+                <th>Active</th>
+                <th>Created At</th>
+                <th>Updated At</th>
             </tr>
         </thead>
         <tbody>
             {% for candidate in candidates %}
                 <tr>
                     <td>{{ candidate.name }}</td>
-                    <td>{{ candidate.party.name }}</td>
-                    <td>{{ candidate.election.name }}</td>
+                    <td>{{ candidate.party.name if candidate.party else 'N/A' }}</td>
+                    <td>{{ candidate.election.name if candidate.election else 'N/A' }}</td>
+                    <td>{{ candidate.date_of_birth.strftime('%Y-%m-%d') if candidate.date_of_birth else 'N/A' }}</td>
+                    <td class="bio-text" title="{{ candidate.bio }}">{{ candidate.bio|truncate(50, True) if candidate.bio else 'N/A' }}</td>
+                    <td>
+                        {% if candidate.photo_url %}
+                            <img src="{{ url_for('static', filename=candidate.photo_url) }}" alt="{{ candidate.name }}'s Photo">
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ candidate.eligibility_status }}</td>
+                    <td>{{ candidate.national_id }}</td>
+                    <td>{{ candidate.votes }}</td>
+                    <td>{{ 'Yes' if candidate.is_active else 'No' }}</td>
+                    <td>{{ candidate.created_at.strftime('%Y-%m-%d %H:%M:%S') if candidate.created_at else 'N/A' }}</td>
+                    <td>{{ candidate.updated_at.strftime('%Y-%m-%d %H:%M:%S') if candidate.updated_at else 'N/A' }}</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+    <a href="{{ url_for('eadmin_dashboard') }}" class="back-link">Back to Dashboard</a>
+</div>
+
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 {% endblock %}
