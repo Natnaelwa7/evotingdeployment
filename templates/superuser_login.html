@@ -1,7 +1,69 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="container">
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    h2 {
+        margin-bottom: 20px;
+        color: #34495e;
+        font-size: 2rem;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-control {
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 1rem;
+    }
+    .btn-primary {
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border-radius: 5px;
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+    .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+    }
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+</style>
+
+<div class="container login-container">
     <h2>Superuser Login</h2>
+
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -9,16 +71,71 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
-    <form method="POST" action="{{ url_for('superuser_login') }}">
+
+    <!-- Login Form -->
+    <form id="superuser-login-form" method="POST">
         <div class="form-group">
-            <label for="username">Username:</label>
+            <label for="username">Username</label>
             <input type="text" class="form-control" id="username" name="username" required>
         </div>
         <div class="form-group">
-            <label for="password">Password:</label>
+            <label for="password">Password</label>
             <input type="password" class="form-control" id="password" name="password" required>
         </div>
         <button type="submit" class="btn btn-primary">Login</button>
     </form>
 </div>
+
+<script>
+    document.getElementById("superuser-login-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+        let isValid = true;
+
+        // Client-side validation
+        if (!username) {
+            alert("Username is required");
+            isValid = false;
+        }
+        if (!password) {
+            alert("Password is required");
+            isValid = false;
+        }
+
+        if (!isValid) {
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ url_for('superuser_login') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: 'include',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.redirected) {
+                // Backend is redirecting (e.g., to dashboard)
+                window.location.assign(response.url);
+            } else if (response.headers.get('content-type')?.includes('application/json')) {
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    // JSON response for API clients
+                    window.location.assign("{{ url_for('superuser_dashboard') }}");
+                } else {
+                    alert(data.message || "Login failed");
+                }
+            } else {
+                alert("Unexpected server response");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("An error occurred. Please try again.");
+        }
+    });
+</script>
 {% endblock %}
