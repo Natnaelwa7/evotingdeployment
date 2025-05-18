@@ -14,12 +14,24 @@
         margin-bottom: 20px;
         color: #2c3e50;
     }
+    .video-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
     video, canvas {
         width: 100%;
         max-width: 400px;
         border: 2px solid #3498db;
         border-radius: 10px;
         margin: 10px 0;
+    }
+    canvas#overlay {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        pointer-events: none;
     }
     .btn-custom {
         margin-top: 10px;
@@ -71,31 +83,32 @@
     <div id="success-message" class="message success"></div>
 
     <div class="card p-4 shadow">
-        <form id="login-form">
+        <form id="login-form" enctype="multipart/form-data">
             <div class="mb-3">
-                <label class="form-label">Email:</label>
-                <input type="email" id="email" class="form-control" required>
+                <label class="form-label" for="email">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" required aria-label="Email">
                 <div id="email-error" class="error"></div>
             </div>
             
             <div class="mb-3">
-                <label class="form-label">Password:</label>
-                <input type="password" id="password" class="form-control" required>
+                <label class="form-label" for="password">Password:</label>
+                <input type="password" id="password" name="password" class="form-control" required aria-label="Password">
                 <div id="password-error" class="error"></div>
             </div>
 
             <div class="mb-4">
-                <div class="text-center">
+                <div class="text-center video-container">
                     <video id="video" autoplay class="mb-2"></video>
-                    <button type="button" class="btn btn-primary btn-custom" onclick="captureImage()">
-                        <i class="bi bi-camera me-2"></i>Capture Face
-                    </button>
-                    <canvas id="canvas" style="display:none;"></canvas>
-                    <div id="image-error" class="error mt-2"></div>
+                    <canvas id="overlay"></canvas>
                 </div>
+                <button type="button" class="btn btn-primary btn-custom" onclick="captureImage()">
+                    <i class="bi bi-camera me-2"></i>Capture Face
+                </button>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <div id="image-error" class="error mt-2"></div>
             </div>
 
-            <input type="hidden" id="image_data">
+            <input type="hidden" id="image_data" name="image">
             <button type="submit" class="btn btn-success btn-custom">
                 <i class="bi bi-box-arrow-in-right me-2"></i>Login
             </button>
@@ -105,34 +118,54 @@
 
 <script>
     let stream;
-    
+
     // Request webcam access
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
         .then(s => {
             stream = s;
             document.getElementById("video").srcObject = stream;
+            drawOverlay();
         })
         .catch(err => {
             console.error("Webcam error:", err);
             showError("Could not access webcam. Please enable camera permissions.");
         });
 
+    function drawOverlay() {
+        const video = document.getElementById("video");
+        const overlay = document.getElementById("overlay");
+        const ctx = overlay.getContext('2d');
+        overlay.width = video.videoWidth;
+        overlay.height = video.videoHeight;
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 4;
+        const rectWidth = overlay.width * 0.5;
+        const rectHeight = overlay.height * 0.5;
+        const rectX = (overlay.width - rectWidth) / 2;
+        const rectY = (overlay.height - rectHeight) / 2;
+        ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+    }
+
+    document.getElementById("video").addEventListener('loadeddata', drawOverlay);
+
     function captureImage() {
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = 640; // Resize for performance
+        canvas.height = (video.videoHeight / video.videoWidth) * 640;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        const imageData = canvas.toDataURL("image/jpeg");
+        const imageData = canvas.toDataURL("image/jpeg", 0.8); // 80% quality
         document.getElementById("image_data").value = imageData;
         document.getElementById("image-error").textContent = "";
+        console.log("Image captured");
     }
 
     // Form Submission
-    document.getElementById("login-form").addEventListener("submit", function(e) {
+    document.getElementById("login-form").addEventListener("submit", async function(e) {
         e.preventDefault();
         
         clearMessages();
@@ -141,9 +174,11 @@
         const imageData = document.getElementById("image_data").value;
         let isValid = true;
 
-        // Validation
         if (!email) {
             document.getElementById("email-error").textContent = "Email is required";
+            isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            document.getElementById("email-error").textContent = "Invalid email format";
             isValid = false;
         }
         if (!password) {
@@ -155,28 +190,55 @@
             isValid = false;
         }
 
-        if (!isValid) return;
+        if (!isValid) {
+            console.log("Validation failed");
+            return;
+        }
 
-        fetch("/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password, image: imageData })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccess(data.message);
-                
-                // Ensure immediate redirection after login
-                window.location.replace(data.redirect);
+        const formData = new FormData();
+        formData.append("email", email);
+        formData.append("password", password);
+        
+        // Convert base64 image to Blob
+        if (imageData) {
+            const response = await fetch(imageData);
+            const blob = await response.blob();
+            formData.append("image", blob, "facial_image.jpg");
+        }
+
+        console.log("Submitting login:", { email });
+        try {
+            const response = await fetch("/login", {
+                method: "POST",
+                body: formData,
+                credentials: 'include', // Include cookies
+                headers: { "Accept": "application/json" }
+            });
+
+            console.log("Login response:", {
+                status: response.status,
+                redirected: response.redirected,
+                url: response.url
+            });
+
+            const data = await response.json();
+            console.log("JSON data:", data);
+
+            if (response.ok && data.success) {
+                showSuccess(data.message || "Login successful! Redirecting...");
+                const redirectUrl = data.redirect_url || '/home';
+                console.log("Redirecting to:", redirectUrl);
+                setTimeout(() => {
+                    window.location.assign(redirectUrl);
+                }, 1000);
             } else {
                 showError(data.message || "Login failed");
+                console.log("Login failed:", data.message);
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error("Login error:", error);
             showError("An error occurred. Please try again.");
-        });
+        }
     });
 
     function clearMessages() {
@@ -197,7 +259,6 @@
         el.style.display = "block";
     }
 
-    // Cleanup webcam on page leave
     window.addEventListener("beforeunload", () => {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
@@ -206,4 +267,5 @@
 </script>
 
 <!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 {% endblock %}
