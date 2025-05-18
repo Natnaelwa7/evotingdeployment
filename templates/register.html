@@ -3,7 +3,7 @@
 {% block content %}
 <style>
     .registration-container {
-        max-width: 500px;
+        max-width: 600px;
         margin: 50px auto;
         padding: 20px;
         background: white;
@@ -35,46 +35,102 @@
         margin-top: 10px;
         width: 100%;
     }
-    #captureMessage, #emailError, #passwordError, #codeError {
+    .error-message {
         color: red;
         font-weight: bold;
-        margin-top: 10px;
+        margin-top: 5px;
     }
     #message {
         margin-top: 15px;
         font-weight: bold;
     }
-    #codeSection {
+    #codeSection, #imageSection {
         display: none;
+    }
+    .form-group {
+        margin-bottom: 15px;
     }
 </style>
 
 <div class="container registration-container">
     <h2>Voter Registration</h2>
-    <form id="registrationForm">
-        <div class="mb-3">
-            <input type="text" id="name" class="form-control" placeholder="Full Name" required>
+    <form id="registrationForm" enctype="multipart/form-data">
+        <input type="hidden" id="step" name="step" value="request_code">
+        <div class="form-group">
+            <input type="text" id="name" name="name" class="form-control" placeholder="Full Name" required aria-label="Full Name">
+            <p id="nameError" class="error-message"></p>
         </div>
-        <div class="mb-3">
-            <input type="email" id="email" class="form-control" placeholder="Email" required>
-            <p id="emailError"></p>
+        <div class="form-group">
+            <input type="email" id="email" name="email" class="form-control" placeholder="Email" required aria-label="Email">
+            <p id="emailError" class="error-message"></p>
         </div>
-        <div class="mb-3">
-            <input type="password" id="password" class="form-control" placeholder="Password" required>
-            <p id="passwordError"></p>
+        <div class="form-group">
+            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required aria-label="Password">
+            <p id="passwordError" class="error-message"></p>
         </div>
-        <div class="mb-3" id="codeSection">
-            <input type="text" id="code" class="form-control" placeholder="Invitation Code" required>
-            <p id="codeError"></p>
+        <div class="form-group">
+            <input type="text" id="phone_number" name="phone_number" class="form-control" placeholder="Phone Number" aria-label="Phone Number">
+            <p id="phoneError" class="error-message"></p>
         </div>
-        <div class="video-container">
-            <video id="video" autoplay></video>
-            <canvas id="overlay"></canvas>
+        <div class="form-group">
+            <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" placeholder="Date of Birth (YYYY-MM-DD)" aria-label="Date of Birth">
+            <p id="dobError" class="error-message"></p>
         </div>
-        <button type="button" class="btn btn-primary btn-custom" onclick="captureImage()">Capture Image</button>
-        <p id="captureMessage"></p>
-        <canvas id="canvas" style="display: none;"></canvas>
-        <input type="hidden" id="imageData">
+        <div class="form-group">
+            <select id="gender" name="gender" class="form-control" aria-label="Gender">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+            <p id="genderError" class="error-message"></p>
+        </div>
+        <div class="form-group">
+            <select id="state" name="state" class="form-control" aria-label="State">
+                <option value="">Select State</option>
+                <option value="Afar">Afar</option>
+                <option value="Amhara">Amhara</option>
+                <option value="Benishangul-Gumuz">Benishangul-Gumuz</option>
+                <option value="Gambela">Gambela</option>
+                <option value="Harari">Harari</option>
+                <option value="Oromia">Oromia</option>
+                <option value="Sidama">Sidama</option>
+                <option value="Somali">Somali</option>
+                <option value="South West Ethiopia Peoples' Region">South West Ethiopia Peoples' Region</option>
+                <option value="Southern Nations, Nationalities, and Peoples' Region (SNNPR)">Southern Nations, Nationalities, and Peoples' Region (SNNPR)</option>
+                <option value="Tigray">Tigray</option>
+                <option value="Addis Ababa">Addis Ababa (Chartered City)</option>
+                <option value="Dire Dawa">Dire Dawa (Chartered City)</option>
+            </select>
+            <p id="stateError" class="error-message"></p>
+        </div>
+        <div class="form-group">
+            <input type="text" id="country" name="country" class="form-control" placeholder="Country" aria-label="Country">
+            <p id="countryError" class="error-message"></p>
+        </div>
+        <div class="form-group">
+            <textarea id="address" name="address" class="form-control" placeholder="Address" aria-label="Address"></textarea>
+            <p id="addressError" class="error-message"></p>
+        </div>
+        <div class="form-group">
+            <label for="id_card">National ID Card (PNG/JPEG)</label>
+            <input type="file" id="id_card" name="id_card" class="form-control" accept="image/png,image/jpeg" required aria-label="National ID Card">
+            <p id="idCardError" class="error-message"></p>
+        </div>
+        <div class="form-group" id="codeSection">
+            <input type="text" id="code" name="code" class="form-control" placeholder="Verification Code" required aria-label="Verification Code">
+            <p id="codeError" class="error-message"></p>
+        </div>
+        <div class="form-group" id="imageSection">
+            <div class="video-container">
+                <video id="video" autoplay></video>
+                <canvas id="overlay"></canvas>
+            </div>
+            <button type="button" class="btn btn-primary btn-custom" onclick="captureImage()">Capture Facial Image</button>
+            <p id="captureMessage" class="error-message"></p>
+            <canvas id="canvas" style="display: none;"></canvas>
+            <input type="hidden" id="imageData" name="image">
+        </div>
         <button type="button" id="actionBtn" class="btn btn-primary btn-custom" onclick="handleAction()">Request Verification Code</button>
     </form>
     <p id="message"></p>
@@ -88,12 +144,17 @@
     const captureMessage = document.getElementById('captureMessage');
     const actionBtn = document.getElementById('actionBtn');
     const codeSection = document.getElementById('codeSection');
+    const imageSection = document.getElementById('imageSection');
+    const stepInput = document.getElementById('step');
     let isCodeRequested = false;
 
     // Initialize webcam
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => video.srcObject = stream)
-        .catch(err => console.error("Error accessing webcam:", err));
+        .catch(err => {
+            console.error("Error accessing webcam:", err);
+            document.getElementById('message').textContent = "Unable to access webcam. Please check permissions.";
+        });
 
     function drawOverlay() {
         const ctx = overlay.getContext('2d');
@@ -113,11 +174,27 @@
 
     function captureImage() {
         const context = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = 640; // Resize for performance
+        canvas.height = (video.videoHeight / video.videoWidth) * 640;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        imageDataInput.value = canvas.toDataURL('image/jpeg');
-        captureMessage.textContent = "Face captured successfully!";
+        imageDataInput.value = canvas.toDataURL('image/jpeg', 0.8); // 80% quality
+        captureMessage.textContent = "Facial image captured successfully!";
+        captureMessage.style.color = "green";
+    }
+
+    function validateName() {
+        const name = document.getElementById('name').value;
+        const nameError = document.getElementById('nameError');
+        if (!name.trim()) {
+            nameError.textContent = "Name is required";
+            return false;
+        }
+        if (name.length > 100) {
+            nameError.textContent = "Name is too long";
+            return false;
+        }
+        nameError.textContent = "";
+        return true;
     }
 
     function validateEmail() {
@@ -137,79 +214,199 @@
         const passwordError = document.getElementById('passwordError');
         const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!strongPasswordPattern.test(password)) {
-            passwordError.textContent = "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.";
+            passwordError.textContent = "Password must be at least 8 characters, include an uppercase letter, a number, and a special character.";
             return false;
         }
         passwordError.textContent = "";
         return true;
     }
 
+    function validatePhone() {
+        const phone = document.getElementById('phone_number').value;
+        const phoneError = document.getElementById('phoneError');
+        if (phone && phone.length > 20) {
+            phoneError.textContent = "Phone number is too long";
+            return false;
+        }
+        phoneError.textContent = "";
+        return true;
+    }
+
+    function validateDOB() {
+        const dob = document.getElementById('date_of_birth').value;
+        const dobError = document.getElementById('dobError');
+        if (dob) {
+            const date = new Date(dob);
+            const today = new Date();
+            if (isNaN(date.getTime()) || date > today) {
+                dobError.textContent = "Invalid or future date of birth";
+                return false;
+            }
+        }
+        dobError.textContent = "";
+        return true;
+    }
+
+    function validateGender() {
+        const gender = document.getElementById('gender').value;
+        const genderError = document.getElementById('genderError');
+        if (gender && !['Male', 'Female', 'Other'].includes(gender)) {
+            genderError.textContent = "Invalid gender selection";
+            return false;
+        }
+        genderError.textContent = "";
+        return true;
+    }
+
+    function validateState() {
+        const state = document.getElementById('state').value;
+        const stateError = document.getElementById('stateError');
+        const validStates = [
+            'Afar', 'Amhara', 'Benishangul-Gumuz', 'Gambela', 'Harari',
+            'Oromia', 'Sidama', 'Somali', "South West Ethiopia Peoples' Region",
+            "Southern Nations, Nationalities, and Peoples' Region (SNNPR)",
+            'Tigray', 'Addis Ababa', 'Dire Dawa'
+        ];
+        if (state && !validStates.includes(state)) {
+            stateError.textContent = "Invalid state selection";
+            return false;
+        }
+        stateError.textContent = "";
+        return true;
+    }
+
+    function validateCountry() {
+        const country = document.getElementById('country').value;
+        const countryError = document.getElementById('countryError');
+        if (country && country.length > 100) {
+            countryError.textContent = "Country name is too long";
+            return false;
+        }
+        countryError.textContent = "";
+        return true;
+    }
+
+    function validateAddress() {
+        const address = document.getElementById('address').value;
+        const addressError = document.getElementById('addressError');
+        if (address && address.length > 1000) {
+            addressError.textContent = "Address is too long";
+            return false;
+        }
+        addressError.textContent = "";
+        return true;
+    }
+
+    function validateIdCard() {
+        const idCard = document.getElementById('id_card').files[0];
+        const idCardError = document.getElementById('idCardError');
+        if (!idCard) {
+            idCardError.textContent = "National ID card is required";
+            return false;
+        }
+        const validTypes = ['image/png', 'image/jpeg'];
+        if (!validTypes.includes(idCard.type)) {
+            idCardError.textContent = "Only PNG or JPEG files are allowed";
+            return false;
+        }
+        if (idCard.size > 5 * 1024 * 1024) {
+            idCardError.textContent = "File size must be less than 5MB";
+            return false;
+        }
+        idCardError.textContent = "";
+        return true;
+    }
+
     function validateCode() {
         const code = document.getElementById('code').value;
         const codeError = document.getElementById('codeError');
-        if (isCodeRequested && code.length !== 8) {
-            codeError.textContent = "Code must be 8 characters long";
+        if (isCodeRequested && !code) {
+            codeError.textContent = "Verification code is required";
             return false;
         }
         codeError.textContent = "";
         return true;
     }
 
+    function validateImage() {
+        const image = imageDataInput.value;
+        const captureMessage = document.getElementById('captureMessage');
+        if (isCodeRequested && !image) {
+            captureMessage.textContent = "Please capture a facial image";
+            captureMessage.style.color = "red";
+            return false;
+        }
+        return true;
+    }
+
+    // Add event listeners for real-time validation
+    document.getElementById('name').addEventListener('input', validateName);
     document.getElementById('email').addEventListener('input', validateEmail);
     document.getElementById('password').addEventListener('input', validatePassword);
+    document.getElementById('phone_number').addEventListener('input', validatePhone);
+    document.getElementById('date_of_birth').addEventListener('input', validateDOB);
+    document.getElementById('gender').addEventListener('input', validateGender);
+    document.getElementById('state').addEventListener('change', validateState);
+    document.getElementById('country').addEventListener('input', validateCountry);
+    document.getElementById('address').addEventListener('input', validateAddress);
+    document.getElementById('id_card').addEventListener('change', validateIdCard);
     document.getElementById('code').addEventListener('input', validateCode);
 
     async function handleAction() {
-        if (!validateEmail() || !validatePassword()) return;
+        // Validate all fields
+        if (!validateName() || !validateEmail() || !validatePassword() ||
+            !validatePhone() || !validateDOB() || !validateGender() ||
+            !validateState() || !validateCountry() || !validateAddress() ||
+            !validateIdCard()) {
+            return;
+        }
 
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        if (isCodeRequested && (!validateCode() || !validateImage())) {
+            return;
+        }
 
-        if (!isCodeRequested) {
-            // Step 1: Request Verification Code
+        const form = document.getElementById('registrationForm');
+        const formData = new FormData(form);
+
+        // Convert base64 image to file for verify_code step
+        if (isCodeRequested && imageDataInput.value) {
+            const blob = await (await fetch(imageDataInput.value)).blob();
+            formData.set('image', blob, 'facial_image.jpg');
+        }
+
+        try {
             const response = await fetch('/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ step: 'request_code', name, email, password })
+                body: formData,
+                credentials: 'include', // Support JWT cookies
+                headers: { 'Accept': 'application/json' }
             });
 
             const result = await response.json();
             document.getElementById('message').textContent = result.message;
 
             if (response.ok && result.success) {
-                isCodeRequested = true;
-                codeSection.style.display = 'block';
-                actionBtn.textContent = 'Register';
-                actionBtn.classList.remove('btn-primary');
-                actionBtn.classList.add('btn-success');
+                if (!isCodeRequested) {
+                    // After request_code
+                    isCodeRequested = true;
+                    stepInput.value = 'verify_code';
+                    codeSection.style.display = 'block';
+                    imageSection.style.display = 'block';
+                    actionBtn.textContent = 'Register';
+                    actionBtn.classList.remove('btn-primary');
+                    actionBtn.classList.add('btn-success');
+                } else {
+                    // After verify_code
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                }
+            } else {
+                document.getElementById('message').textContent = result.message || 'Operation failed.';
             }
-        } else {
-            // Step 2: Register with Verification Code
-            if (!validateCode()) return;
-
-            const code = document.getElementById('code').value;
-            const image = imageDataInput.value;
-
-            if (!image) {
-                document.getElementById('message').textContent = "Please capture an image before submitting.";
-                return;
-            }
-
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ step: 'verify_code', name, email, password, code, image })
-            });
-
-            const result = await response.json();
-            document.getElementById('message').textContent = result.message;
-
-            if (response.ok && result.success) {
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 2000);
-            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            document.getElementById('message').textContent = 'An error occurred. Please try again.';
         }
     }
 </script>
